@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Servo Control</title>
+</head>
+<body>
+    <h1>Servo Control Interface</h1>
+    <a href="/?min">Move Servo to Min</a><br>
+    <a href="/?max">Move Servo to Max</a><br>
+</body>
+</html>

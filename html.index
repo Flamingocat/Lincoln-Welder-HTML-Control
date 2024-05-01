@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>SA 200 REMOTE</title>
+     <title><span style="color: green; font-weight: bold;">SA 200 REMOTE</span></title>
     <style>
         body {
             display: flex;
@@ -80,9 +80,10 @@
     </style>
 </head>
 <body>
+    <h1>SA 200 REMOTE</h1>
     <div class="section">
         <h2>Starter</h2>
-        <button id="toggleRelay16" class="button off">ON</button>
+        <button id="toggleRelay16" class="button on">ON</button>
     </div>
 
     <div class="section">
@@ -92,7 +93,7 @@
 
     <div class="section">
         <h2>Ignition</h2>
-        <button id="toggleRelay17" class="button off">ON</button>
+        <button id="toggleRelay17" class="button off">OFF</button>
         <div id="timerDisplay" class="countdown"></div>
     </div>
 
@@ -101,7 +102,7 @@
             const button = document.getElementById('toggleRelay' + relayId);
             button.classList.toggle('on', isOn);
             button.classList.toggle('off', !isOn);
-            button.innerText = isOn ? 'OFF' : 'ON';
+            button.innerText = isOn ? 'ON' : 'OFF';
 
             // Send a request to the server to handle the relay state
             fetch('/toggle_relay_' + relayId + '?state=' + (isOn ? 'on' : 'off'))
@@ -109,7 +110,15 @@
                 .catch(error => console.error('Error:', error));
         }
 
-        document.getElementById('toggleRelay16').addEventListener('click', () => toggleRelay(16, true));
+        document.getElementById('toggleRelay16').addEventListener('click', function() {
+            const button = this;
+            if (button.classList.contains('on')) {
+                toggleRelay(16, false);
+            } else {
+                toggleRelay(16, true);
+            }
+        });
+
         document.getElementById('toggleRelay17').addEventListener('click', function() {
             const button = this;
             toggleRelay(17, true); // Turn on immediately when clicked

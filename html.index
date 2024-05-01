@@ -1,11 +1,148 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Servo Control</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>SA 200 REMOTE</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            color: lightgreen;
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: green;
+        }
+        .section {
+            width: 80%;
+            max-width: 400px;
+            margin-top: 20px;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #f44336; /* Red for OFF */
+            color: white;
+        }
+
+        .button.on {
+            background-color: green; /* Green for ON */
+        }
+
+        .button:hover {
+            opacity: 0.8;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 40px;
+            background: #4CAF50;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 40px;
+            background: black;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: black;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Servo Control Interface</h1>
-    <a href="/?min">Move Servo to Min</a><br>
-    <a href="/?max">Move Servo to Max</a><br>
+    <div class="section">
+        <h2>Starter</h2>
+        <button id="toggleRelay16" class="button off">ON</button>
+    </div>
+
+    <div class="section">
+        <h2>Choke (Servo)</h2>
+        <input type="range" min="0" max="114" value="0" id="servoRange" step="5" class="slider">
+    </div>
+
+    <div class="section">
+        <h2>Ignition</h2>
+        <button id="toggleRelay17" class="button off">ON</button>
+        <div id="timerDisplay" class="countdown"></div>
+    </div>
+
+    <script>
+        function toggleRelay(relayId, isOn) {
+            const button = document.getElementById('toggleRelay' + relayId);
+            button.classList.toggle('on', isOn);
+            button.classList.toggle('off', !isOn);
+            button.innerText = isOn ? 'OFF' : 'ON';
+
+            // Send a request to the server to handle the relay state
+            fetch('/toggle_relay_' + relayId + '?state=' + (isOn ? 'on' : 'off'))
+                .then(response => response.text())
+                .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('toggleRelay16').addEventListener('click', () => toggleRelay(16, true));
+        document.getElementById('toggleRelay17').addEventListener('click', function() {
+            const button = this;
+            toggleRelay(17, true); // Turn on immediately when clicked
+            let counter = 10; // Starting the countdown at 10 seconds
+            document.getElementById('timerDisplay').innerText = counter + ' seconds remaining';
+            button.disabled = true;
+
+            const interval = setInterval(() => {
+                counter--;
+                document.getElementById('timerDisplay').innerText = counter + ' seconds remaining';
+
+                if (counter <= 0) {
+                    clearInterval(interval);
+                    toggleRelay(17, false); // Automatically turn OFF after countdown
+                    document.getElementById('timerDisplay').innerText = ''; // Clear countdown
+                    button.disabled = false;
+                }
+            }, 1000);
+        });
+
+        // Function to send servo angle update to the server
+        function updateServo(angle) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/?angle=" + angle, true);
+            xhr.send();
+        }
+
+        // Function to update servo angle when slider value changes
+        document.getElementById('servoRange').addEventListener('input', function() {
+            updateServo(this.value);
+        });
+    </script>
+
 </body>
 </html>
+

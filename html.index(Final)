@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA 200 REMOTE</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: black; /* Set background color to black */
+            color: white; /* Set text color to white */
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: white; /* Title color white */
+            text-align: center; /* Center align the title */
+            text-decoration: underline; /* Add underline to title */
+            padding: 10px; /* Add padding to title */
+            border: 2px solid white; /* Add border around title */
+            border-radius: 10px; /* Add border radius */
+            background-color: darkgrey; /* Set title background color to dark grey */
+        }
+
+        .section {
+            width: 80%;
+            max-width: 400px;
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px solid white; /* Add border around sections */
+            border-radius: 10px; /* Add border radius */
+            background-color: #333; /* Set section background color to dark grey */
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold; /* Make button text bold */
+            cursor: pointer;
+            background-color: #4CAF50; /* Sage green for OFF */
+            color: white;
+        }
+
+        .button.on {
+            background-color: #f44336; /* Maroon red for ON */
+        }
+
+        .button:hover {
+            opacity: 0.8;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to right, #ccc, #999); /* Shades of grey for slider */
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border: 2px solid white; /* Add border to slider */
+            border-radius: 10px; /* Add border radius */
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 40px;
+            background: darkgrey; /* Dark grey color for slider thumb */
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: darkgrey; /* Dark grey color for slider thumb */
+            cursor: pointer;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <h1>SA 200 REMOTE</h1>
+    <div class="section">
+        <h2>START</h2>
+        <button id="toggleRelay16" class="button on">ON</button>
+    </div>
+
+    <div class="section">
+        <h2>CHOKE</h2>
+        <input type="range" min="0" max="114" value="0" id="servoRange" step="5" class="slider">
+    </div>
+
+    <div class="section">
+        <h2>SHUT OFF</h2>
+        <button id="toggleRelay17" class="button off">OFF</button>
+        <div id="timerDisplay" class="countdown"></div>
+    </div>
+
+    <script>
+        function toggleRelay(relayId, isOn) {
+            const button = document.getElementById('toggleRelay' + relayId);
+            button.classList.toggle('on', isOn);
+            button.classList.toggle('off', !isOn);
+            button.innerText = isOn ? 'ON' : 'OFF';
+
+            // Send a request to the server to handle the relay state
+            fetch('/toggle_relay_' + relayId + '?state=' + (isOn ? 'on' : 'off'))
+                .then(response => response.text())
+                .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('toggleRelay16').addEventListener('click', function() {
+            const button = this;
+            if (button.classList.contains('on')) {
+                toggleRelay(16, false);
+            } else {
+                toggleRelay(16, true);
+            }
+        });
+
+        document.getElementById('toggleRelay17').addEventListener('click', function() {
+            const button = this;
+            toggleRelay(17, true); // Turn on immediately when clicked
+            let counter = 10; // Starting the countdown at 10 seconds
+            document.getElementById('timerDisplay').innerText = counter + ' seconds remaining';
+            button.disabled = true;
+
+            const interval = setInterval(() => {
+                counter--;
+                document.getElementById('timerDisplay').innerText = counter + ' seconds remaining';
+
+                if (counter <= 0) {
+                    clearInterval(interval);
+                    toggleRelay(17, false); // Automatically turn OFF after countdown
+                    document.getElementById('timerDisplay').innerText = ''; // Clear countdown
+                    button.disabled = false;
+                }
+            }, 1000);
+        });
+
+        // Function to send servo angle update to the server
+        function updateServo(angle) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "/?angle=" + angle, true);
+            xhr.send();
+            // Turn off servo LED after 1 second
+            setTimeout(() => {
+                // Code to turn off servo LED
+            }, 1000);
+        }
+
+        // Function to update servo angle when slider value changes
+        document.getElementById('servoRange').addEventListener('input', function() {
+            updateServo(this.value);
+        });
+    </script>
+
+</body>
+</html>
+
